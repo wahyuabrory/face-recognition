@@ -1,5 +1,3 @@
-"""Generic directory-per-class dataset discovery and deterministic splitting."""
-
 from __future__ import annotations
 
 import random
@@ -11,7 +9,7 @@ from .config import SplitConfig
 
 
 class DatasetError(ValueError):
-    """Raised when a dataset cannot satisfy the package contract."""
+    pass
 
 
 IMAGE_EXTENSIONS = frozenset({".bmp", ".jpeg", ".jpg", ".png", ".tif", ".tiff", ".webp"})
@@ -19,8 +17,6 @@ IMAGE_EXTENSIONS = frozenset({".bmp", ".jpeg", ".jpg", ".png", ".tif", ".tiff", 
 
 @dataclass(frozen=True, slots=True)
 class ImageRecord:
-    """One image and its discovered class label."""
-
     path: Path
     class_name: str
     class_index: int
@@ -28,8 +24,6 @@ class ImageRecord:
 
 @dataclass(frozen=True, slots=True)
 class DiscoveredDataset:
-    """Dataset records with stable class ordering."""
-
     root: Path
     classes: tuple[str, ...]
     records: tuple[ImageRecord, ...]
@@ -37,16 +31,12 @@ class DiscoveredDataset:
 
 @dataclass(frozen=True, slots=True)
 class DatasetSplit:
-    """Train, validation, and test records."""
-
     train: tuple[ImageRecord, ...]
     validation: tuple[ImageRecord, ...]
     test: tuple[ImageRecord, ...]
 
     @property
     def all_records(self) -> tuple[ImageRecord, ...]:
-        """Return records in split order."""
-
         return self.train + self.validation + self.test
 
 
@@ -58,8 +48,6 @@ def _sorted_directories(root: Path) -> list[Path]:
 
 
 def discover_dataset(root: str | Path) -> DiscoveredDataset:
-    """Discover image files below one directory per class."""
-
     dataset_root = Path(root).expanduser()
     if not dataset_root.is_dir():
         raise DatasetError(f"dataset directory does not exist: {dataset_root}")
@@ -99,8 +87,6 @@ def discover_dataset(root: str | Path) -> DiscoveredDataset:
 
 
 def _allocate_counts(sample_count: int, config: SplitConfig) -> tuple[int, int, int]:
-    """Allocate one class across three partitions while keeping each populated."""
-
     if sample_count < 3:
         raise DatasetError(
             "each class needs at least three images for a stratified train/validation/test split"
@@ -128,8 +114,6 @@ def stratified_split(
     dataset: DiscoveredDataset | str | Path,
     config: SplitConfig | None = None,
 ) -> DatasetSplit:
-    """Split a discovered dataset deterministically by class."""
-
     if not isinstance(dataset, DiscoveredDataset):
         dataset = discover_dataset(dataset)
     split_config = config or SplitConfig()
@@ -165,12 +149,8 @@ def split_dataset(
     dataset: DiscoveredDataset | str | Path,
     config: SplitConfig | None = None,
 ) -> DatasetSplit:
-    """Alias for :func:`stratified_split` used by the public API."""
-
     return stratified_split(dataset, config)
 
 
 def labels_for(records: Iterable[ImageRecord]) -> list[int]:
-    """Return integer labels in record order."""
-
     return [record.class_index for record in records]

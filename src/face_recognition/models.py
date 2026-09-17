@@ -1,5 +1,3 @@
-"""Lazy TensorFlow model builders for the supported backbones."""
-
 from __future__ import annotations
 
 from typing import Any
@@ -8,7 +6,7 @@ from .config import Backbone, Normalization
 
 
 class ModelError(RuntimeError):
-    """Raised when a model cannot be built or configured."""
+    pass
 
 
 def _tensorflow() -> Any:
@@ -65,8 +63,6 @@ def build_classifier(
     normalization: str | Normalization = Normalization.ZERO_ONE,
     weights: str | None = "imagenet",
 ) -> Any:
-    """Build and compile a frozen transfer-learning classifier."""
-
     if num_classes < 2:
         raise ModelError("num_classes must be at least two")
     if len(image_size) != 2 or any(dimension <= 0 for dimension in image_size):
@@ -115,8 +111,6 @@ def enable_fine_tuning(
     layers: int = 30,
     learning_rate: float = 0.00001,
 ) -> Any:
-    """Unfreeze the last backbone layers and recompile at the fine-tuning rate."""
-
     if layers <= 0 or learning_rate <= 0:
         raise ModelError("fine-tune layers and learning_rate must be positive")
     tf = _tensorflow()

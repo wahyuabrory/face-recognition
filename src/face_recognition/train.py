@@ -1,5 +1,3 @@
-"""Training pipeline for one validated scenario."""
-
 from __future__ import annotations
 
 import json
@@ -24,8 +22,6 @@ from .preprocess import FaceDetector, HaarFaceDetector, preprocess_path
 
 @dataclass(slots=True)
 class TrainingResult:
-    """Trained model and the data needed for later evaluation."""
-
     scenario: ScenarioConfig
     class_names: tuple[str, ...]
     model: Any
@@ -141,8 +137,6 @@ def train_scenario(
     save_model: bool = False,
     verbose: int = 1,
 ) -> TrainingResult:
-    """Preprocess data, train one scenario, and return a structured result."""
-
     training_config = training or TrainingConfig()
     preprocessing_config = (preprocessing or PreprocessingConfig()).model_copy(
         update={"image_size": training_config.image_size, "margin": scenario.margin}

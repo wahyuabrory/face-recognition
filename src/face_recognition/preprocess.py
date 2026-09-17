@@ -1,5 +1,3 @@
-"""OpenCV face detection and bounded RGB face crops."""
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -11,13 +9,11 @@ import numpy as np
 
 
 class PreprocessingError(ValueError):
-    """Raised when an image cannot produce a face crop."""
+    pass
 
 
 @dataclass(frozen=True, slots=True)
 class BoundingBox:
-    """A face detection in x, y, width, height form."""
-
     x: int
     y: int
     width: int
@@ -25,24 +21,17 @@ class BoundingBox:
 
     @property
     def area(self) -> int:
-        """Return the box area."""
-
         return self.width * self.height
 
 
 class FaceDetector(Protocol):
-    """Protocol for injectable detectors."""
-
-    def detect(self, grayscale_image: np.ndarray) -> Sequence[BoundingBox]:
-        """Return face boxes for a grayscale uint8 image."""
+    def detect(self, grayscale_image: np.ndarray) -> Sequence[BoundingBox]: ...
 
 
 DetectorLike = FaceDetector | Callable[[np.ndarray], Sequence[BoundingBox]]
 
 
 class HaarFaceDetector:
-    """OpenCV Haar detector using the bundled frontal-face cascade."""
-
     def __init__(
         self,
         cascade_path: str | Path | None = None,
@@ -61,8 +50,6 @@ class HaarFaceDetector:
         self._min_face_size = min_face_size
 
     def detect(self, grayscale_image: np.ndarray) -> tuple[BoundingBox, ...]:
-        """Detect faces in a grayscale image."""
-
         detections = self._classifier.detectMultiScale(
             grayscale_image,
             scaleFactor=self._scale_factor,
@@ -122,8 +109,6 @@ def preprocess_image(
     output_size: tuple[int, int] = (224, 224),
     input_color: str = "bgr",
 ) -> np.ndarray:
-    """Detect, crop, clamp, and resize one image to RGB uint8."""
-
     if not 0 <= margin < 1:
         raise PreprocessingError("margin must be between 0 and 1")
     if len(output_size) != 2 or any(dimension <= 0 for dimension in output_size):
@@ -166,8 +151,6 @@ def preprocess_path(
     margin: float = 0.1,
     output_size: tuple[int, int] = (224, 224),
 ) -> np.ndarray:
-    """Read a BGR image from disk and return its RGB face crop."""
-
     image_path = Path(path)
     image = cv2.imread(str(image_path), cv2.IMREAD_COLOR)
     if image is None:

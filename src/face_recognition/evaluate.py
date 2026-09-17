@@ -1,5 +1,3 @@
-"""Model evaluation, metrics, ranking, and safe artifact writing."""
-
 from __future__ import annotations
 
 import csv
@@ -14,13 +12,11 @@ from .config import ScenarioConfig
 
 
 class EvaluationError(ValueError):
-    """Raised when model output cannot be evaluated or written."""
+    pass
 
 
 @dataclass(frozen=True, slots=True)
 class EvaluationResult:
-    """Structured test metrics for one scenario."""
-
     scenario: ScenarioConfig | None
     seed: int
     test_loss: float
@@ -31,26 +27,18 @@ class EvaluationResult:
 
     @property
     def precision(self) -> float:
-        """Return macro precision."""
-
         return float(self.classification_report["macro avg"]["precision"])
 
     @property
     def recall(self) -> float:
-        """Return macro recall."""
-
         return float(self.classification_report["macro avg"]["recall"])
 
     @property
     def f1_score(self) -> float:
-        """Return macro F1 score."""
-
         return float(self.classification_report["macro avg"]["f1-score"])
 
     @property
     def support(self) -> int:
-        """Return total evaluated support."""
-
         return int(self.classification_report["macro avg"]["support"])
 
 
@@ -147,8 +135,6 @@ def evaluate_model(
     run_config: dict[str, Any] | None = None,
     verbose: int = 0,
 ) -> EvaluationResult:
-    """Evaluate a compiled classifier and optionally write its artifacts."""
-
     labels = np.asarray(test_labels, dtype=np.int64)
     if labels.ndim != 1 or len(labels) == 0:
         raise EvaluationError("test_labels must be a non-empty one-dimensional array")
@@ -171,8 +157,6 @@ def evaluate_model(
 
 
 def artifact_directory(output_root: str | Path, scenario_id: int) -> Path:
-    """Create and return a scenario directory under the requested output root."""
-
     root = Path(output_root).expanduser().resolve()
     if root.exists() and not root.is_dir():
         raise EvaluationError(f"output root is not a directory: {root}")
@@ -187,8 +171,6 @@ def artifact_directory(output_root: str | Path, scenario_id: int) -> Path:
 
 
 def safe_artifact_path(output_root: str | Path, *parts: str) -> Path:
-    """Return a path under output_root and reject traversal or symlink escapes."""
-
     root = Path(output_root).expanduser().resolve()
     candidate = root.joinpath(*parts).resolve()
     try:
@@ -211,8 +193,6 @@ def write_artifacts(
     history: dict[str, Any] | None = None,
     run_config: dict[str, Any] | None = None,
 ) -> Path:
-    """Write JSON and CSV metrics below a checked scenario directory."""
-
     if result.scenario is None:
         raise EvaluationError("a scenario is required when writing artifacts")
     directory = artifact_directory(output_root, result.scenario.id)
@@ -257,8 +237,6 @@ def _write_confusion_matrix(path: Path, matrix: list[list[int]], labels: list[st
 
 
 def rank_results(results: Sequence[EvaluationResult]) -> list[EvaluationResult]:
-    """Rank by highest accuracy, then lowest loss, then scenario ID."""
-
     return sorted(
         results,
         key=lambda result: (

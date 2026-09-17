@@ -1,5 +1,3 @@
-"""Validated configuration for the training and evaluation pipeline."""
-
 from __future__ import annotations
 
 from enum import StrEnum
@@ -12,26 +10,20 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_valida
 
 
 class ConfigurationError(ValueError):
-    """Raised when a YAML configuration cannot be used."""
+    pass
 
 
 class Normalization(StrEnum):
-    """Supported plain pixel scaling modes."""
-
     ZERO_ONE = "0_1"
     MINUS_ONE_ONE = "minus1_1"
 
 
 class Backbone(StrEnum):
-    """Supported transfer-learning backbones."""
-
     MOBILENETV2 = "mobilenetv2"
     EFFICIENTNETB0 = "efficientnetb0"
 
 
 class TrainingConfig(BaseModel):
-    """Global training defaults."""
-
     model_config = ConfigDict(extra="forbid")
 
     image_size: tuple[int, int] = (224, 224)
@@ -56,8 +48,6 @@ class TrainingConfig(BaseModel):
 
 
 class SplitConfig(BaseModel):
-    """Stratified dataset split settings."""
-
     model_config = ConfigDict(extra="forbid")
 
     train_ratio: float = Field(default=0.7, gt=0, lt=1)
@@ -74,8 +64,6 @@ class SplitConfig(BaseModel):
 
 
 class PreprocessingConfig(BaseModel):
-    """Face detection and crop settings."""
-
     model_config = ConfigDict(extra="forbid")
 
     image_size: tuple[int, int] = (224, 224)
@@ -93,8 +81,6 @@ class PreprocessingConfig(BaseModel):
 
 
 class AugmentationConfig(BaseModel):
-    """In-memory training augmentation settings."""
-
     model_config = ConfigDict(extra="forbid")
 
     copies_per_image: int = Field(default=5, gt=0)
@@ -105,8 +91,6 @@ class AugmentationConfig(BaseModel):
 
 
 class OutputConfig(BaseModel):
-    """Local artifact output settings."""
-
     model_config = ConfigDict(extra="forbid")
 
     root: Path = Path("artifacts")
@@ -114,8 +98,6 @@ class OutputConfig(BaseModel):
 
 
 class ScenarioConfig(BaseModel):
-    """One member of the sixteen-factor scenario matrix."""
-
     model_config = ConfigDict(extra="forbid")
 
     id: int = Field(gt=0)
@@ -126,8 +108,6 @@ class ScenarioConfig(BaseModel):
 
 
 class ScenarioFileConfig(BaseModel):
-    """Complete YAML configuration, including the exact scenario matrix."""
-
     model_config = ConfigDict(extra="forbid")
 
     defaults: TrainingConfig = Field(default_factory=TrainingConfig)
@@ -167,8 +147,6 @@ class ScenarioFileConfig(BaseModel):
         return self
 
     def scenario(self, scenario_id: int) -> ScenarioConfig:
-        """Return a scenario by ID or raise a clear configuration error."""
-
         for scenario in self.scenarios:
             if scenario.id == scenario_id:
                 return scenario
@@ -176,8 +154,6 @@ class ScenarioFileConfig(BaseModel):
 
 
 def load_config(path: str | Path) -> ScenarioFileConfig:
-    """Load and validate a YAML scenario file without importing TensorFlow."""
-
     config_path = Path(path)
     if not config_path.is_file():
         raise ConfigurationError(f"configuration file does not exist: {config_path}")
@@ -200,12 +176,8 @@ def load_config(path: str | Path) -> ScenarioFileConfig:
 
 
 def load_scenarios(path: str | Path) -> list[ScenarioConfig]:
-    """Load the validated scenario list from a YAML file."""
-
     return load_config(path).scenarios
 
 
 def config_dict(config: ScenarioFileConfig) -> dict[str, Any]:
-    """Return a JSON-compatible representation for run metadata."""
-
     return config.model_dump(mode="json")

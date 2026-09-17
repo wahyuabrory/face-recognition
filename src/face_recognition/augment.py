@@ -1,5 +1,3 @@
-"""Deterministic, in-memory image augmentation helpers."""
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -47,8 +45,6 @@ def augment_image(
     *,
     rng: np.random.Generator | None = None,
 ) -> np.ndarray:
-    """Create one augmented copy without writing it to disk."""
-
     augmentation = config or AugmentationConfig()
     generator = rng if rng is not None else np.random.default_rng()
     result = _validate_image(image).copy()
@@ -78,8 +74,6 @@ def augment_training_images(
     *,
     seed: int = 42,
 ) -> np.ndarray:
-    """Return each input plus exactly ``copies_per_image`` augmented copies."""
-
     augmentation = config or AugmentationConfig()
     generator = np.random.default_rng(seed)
     augmented: list[np.ndarray] = []
@@ -102,8 +96,6 @@ def augment_training_set(
     *,
     seed: int = 42,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Augment images and repeat each label for the original plus its copies."""
-
     augmentation = config or AugmentationConfig()
     image_list = list(images)
     label_list = list(labels)
@@ -118,8 +110,6 @@ def augment_training_set(
 def write_augmented_images(
     images: Iterable[np.ndarray], output_directory: str | Path
 ) -> list[Path]:
-    """Write images only when the caller explicitly requests an output directory."""
-
     directory = Path(output_directory)
     directory.mkdir(parents=True, exist_ok=True)
     paths: list[Path] = []

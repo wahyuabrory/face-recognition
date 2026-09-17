@@ -1,5 +1,3 @@
-"""Command-line interface with configuration validation before TensorFlow import."""
-
 from __future__ import annotations
 
 import argparse
@@ -138,8 +136,6 @@ def _run_command(args: argparse.Namespace) -> int:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """Run the command-line interface and return a process status."""
-
     parser = _parser()
     args = parser.parse_args(argv)
     try:
