@@ -40,7 +40,9 @@ class HaarFaceDetector:
         min_neighbors: int = 5,
         min_face_size: tuple[int, int] = (30, 30),
     ) -> None:
-        default_cascade = Path(cv2.data.haarcascades) / "haarcascade_frontalface_default.xml"
+        default_cascade = (
+            Path(getattr(cv2, "data").haarcascades) / "haarcascade_frontalface_default.xml"
+        )
         path = str(cascade_path or default_cascade)
         self._classifier = cv2.CascadeClassifier(path)
         if self._classifier.empty():

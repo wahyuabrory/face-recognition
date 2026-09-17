@@ -3,7 +3,6 @@ from __future__ import annotations
 import random
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
 
 from .config import SplitConfig
 
@@ -18,13 +17,11 @@ IMAGE_EXTENSIONS = frozenset({".bmp", ".jpeg", ".jpg", ".png", ".tif", ".tiff", 
 @dataclass(frozen=True, slots=True)
 class ImageRecord:
     path: Path
-    class_name: str
     class_index: int
 
 
 @dataclass(frozen=True, slots=True)
 class DiscoveredDataset:
-    root: Path
     classes: tuple[str, ...]
     records: tuple[ImageRecord, ...]
 
@@ -34,10 +31,6 @@ class DatasetSplit:
     train: tuple[ImageRecord, ...]
     validation: tuple[ImageRecord, ...]
     test: tuple[ImageRecord, ...]
-
-    @property
-    def all_records(self) -> tuple[ImageRecord, ...]:
-        return self.train + self.validation + self.test
 
 
 def _sorted_directories(root: Path) -> list[Path]:
@@ -74,13 +67,9 @@ def discover_dataset(root: str | Path) -> DiscoveredDataset:
             raise DatasetError(
                 f"class directory contains no supported images: {class_directory.name}"
             )
-        records.extend(
-            ImageRecord(path=path, class_name=class_directory.name, class_index=class_index)
-            for path in image_paths
-        )
+        records.extend(ImageRecord(path=path, class_index=class_index) for path in image_paths)
 
     return DiscoveredDataset(
-        root=dataset_root,
         classes=tuple(directory.name for directory in class_directories),
         records=tuple(records),
     )
@@ -143,14 +132,3 @@ def stratified_split(
         )
 
     return DatasetSplit(tuple(train), tuple(validation), tuple(test))
-
-
-def split_dataset(
-    dataset: DiscoveredDataset | str | Path,
-    config: SplitConfig | None = None,
-) -> DatasetSplit:
-    return stratified_split(dataset, config)
-
-
-def labels_for(records: Iterable[ImageRecord]) -> list[int]:
-    return [record.class_index for record in records]

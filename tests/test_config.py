@@ -20,7 +20,7 @@ def test_config_loads_without_tensorflow_import() -> None:
     config = load_config(CONFIG_PATH)
 
     assert len(config.scenarios) == 16
-    assert config.defaults.image_size == (224, 224)
+    assert config.preprocessing.image_size == (224, 224)
     assert config.defaults.seed == 42
 
 

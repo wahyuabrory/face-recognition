@@ -22,15 +22,11 @@ from .preprocess import FaceDetector, HaarFaceDetector, preprocess_path
 
 @dataclass(slots=True)
 class TrainingResult:
-    scenario: ScenarioConfig
     class_names: tuple[str, ...]
     model: Any
     test_images: np.ndarray
     test_labels: np.ndarray
     history: dict[str, dict[str, list[float]]]
-    artifact_dir: Path
-    epochs_run: int
-    fine_tuned: bool
     run_config: dict[str, Any] = field(default_factory=dict)
 
 
@@ -139,7 +135,7 @@ def train_scenario(
 ) -> TrainingResult:
     training_config = training or TrainingConfig()
     preprocessing_config = (preprocessing or PreprocessingConfig()).model_copy(
-        update={"image_size": training_config.image_size, "margin": scenario.margin}
+        update={"margin": scenario.margin}
     )
     augmentation_config = augmentation or AugmentationConfig(brightness=scenario.brightness)
     split_config = split or SplitConfig(seed=training_config.seed)
@@ -186,7 +182,7 @@ def train_scenario(
     model = build_classifier(
         scenario.backbone,
         len(dataset.classes),
-        image_size=training_config.image_size,
+        image_size=preprocessing_config.image_size,
         dropout=training_config.dropout,
         dense_units=training_config.dense_units,
         learning_rate=training_config.learning_rate,
@@ -204,7 +200,6 @@ def train_scenario(
         verbose=verbose,
     )
     histories["baseline"] = _history_values(baseline_history)
-    epochs_run = len(histories["baseline"].get("loss", []))
 
     if training_config.fine_tune:
         enable_fine_tuning(
@@ -223,7 +218,6 @@ def train_scenario(
             verbose=verbose,
         )
         histories["fine_tune"] = _history_values(fine_tune_history)
-        epochs_run += len(histories["fine_tune"].get("loss", []))
 
     directory = artifact_directory(output_root, scenario.id)
     run_config = _write_training_metadata(
@@ -241,14 +235,10 @@ def train_scenario(
         model.save(model_path)
 
     return TrainingResult(
-        scenario=scenario,
         class_names=dataset.classes,
         model=model,
         test_images=evaluation_images,
         test_labels=evaluation_labels,
         history=histories,
-        artifact_dir=directory,
-        epochs_run=epochs_run,
-        fine_tuned=training_config.fine_tune,
         run_config=run_config,
     )

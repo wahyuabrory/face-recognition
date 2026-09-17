@@ -104,12 +104,6 @@ dependencies = [
     { name = "tensorflow" },
 ]
 
-[package.optional-dependencies]
-dev = [
-    { name = "pytest" },
-    { name = "ruff" },
-]
-
 [package.dev-dependencies]
 dev = [
     { name = "pytest" },
@@ -121,12 +115,9 @@ requires-dist = [
     { name = "numpy", specifier = ">=1.26,<3" },
     { name = "opencv-python-headless", specifier = ">=4.10,<5" },
     { name = "pydantic", specifier = ">=2.7,<3" },
-    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0,<9" },
     { name = "pyyaml", specifier = ">=6.0,<7" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.8,<1" },
     { name = "tensorflow", specifier = ">=2.20,<2.22" },
 ]
-provides-extras = ["dev"]
 
 [package.metadata.requires-dev]
 dev = [

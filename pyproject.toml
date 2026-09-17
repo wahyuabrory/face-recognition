@@ -17,12 +17,6 @@ dependencies = [
   "tensorflow>=2.20,<2.22",
 ]
 
-[project.optional-dependencies]
-dev = [
-  "pytest>=8.0,<9",
-  "ruff>=0.8,<1",
-]
-
 [project.scripts]
 face-recognition = "face_recognition.cli:main"
 

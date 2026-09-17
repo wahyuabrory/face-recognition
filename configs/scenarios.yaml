@@ -1,5 +1,4 @@
 defaults:
-  image_size: [224, 224]
   batch_size: 32
   epochs: 20
   learning_rate: 0.0001
@@ -32,9 +31,7 @@ augmentation:
   brightness: 0.1
   grayscale: false
 
-output:
-  root: artifacts
-  save_model: false
+save_model: false
 
 scenarios:
   - id: 1

@@ -3,7 +3,7 @@ from __future__ import annotations
 from enum import StrEnum
 from itertools import product
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
@@ -26,7 +26,6 @@ class Backbone(StrEnum):
 class TrainingConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    image_size: tuple[int, int] = (224, 224)
     batch_size: int = Field(default=32, gt=0)
     epochs: int = Field(default=20, gt=0)
     learning_rate: float = Field(default=0.0001, gt=0)
@@ -38,13 +37,6 @@ class TrainingConfig(BaseModel):
     fine_tune: bool = False
     fine_tune_layers: int = Field(default=30, gt=0)
     fine_tune_learning_rate: float = Field(default=0.00001, gt=0)
-
-    @field_validator("image_size")
-    @classmethod
-    def validate_image_size(cls, value: tuple[int, int]) -> tuple[int, int]:
-        if len(value) != 2 or any(dimension <= 0 for dimension in value):
-            raise ValueError("image_size must contain two positive dimensions")
-        return value
 
 
 class SplitConfig(BaseModel):
@@ -90,21 +82,28 @@ class AugmentationConfig(BaseModel):
     grayscale: bool = False
 
 
-class OutputConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    root: Path = Path("artifacts")
-    save_model: bool = False
-
-
 class ScenarioConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     id: int = Field(gt=0)
-    margin: Literal[0.1, 0.3]
+    margin: float
     normalization: Normalization
-    brightness: Literal[0.1, 0.4]
+    brightness: float
     backbone: Backbone
+
+    @field_validator("margin")
+    @classmethod
+    def validate_margin(cls, value: float) -> float:
+        if value not in (0.1, 0.3):
+            raise ValueError("margin must be 0.1 or 0.3")
+        return value
+
+    @field_validator("brightness")
+    @classmethod
+    def validate_brightness(cls, value: float) -> float:
+        if value not in (0.1, 0.4):
+            raise ValueError("brightness must be 0.1 or 0.4")
+        return value
 
 
 class ScenarioFileConfig(BaseModel):
@@ -114,7 +113,7 @@ class ScenarioFileConfig(BaseModel):
     split: SplitConfig = Field(default_factory=SplitConfig)
     preprocessing: PreprocessingConfig = Field(default_factory=PreprocessingConfig)
     augmentation: AugmentationConfig = Field(default_factory=AugmentationConfig)
-    output: OutputConfig = Field(default_factory=OutputConfig)
+    save_model: bool = False
     scenarios: list[ScenarioConfig]
 
     @model_validator(mode="after")
@@ -173,11 +172,3 @@ def load_config(path: str | Path) -> ScenarioFileConfig:
         return ScenarioFileConfig.model_validate(raw)
     except ValidationError as exc:
         raise ConfigurationError(str(exc)) from exc
-
-
-def load_scenarios(path: str | Path) -> list[ScenarioConfig]:
-    return load_config(path).scenarios
-
-
-def config_dict(config: ScenarioFileConfig) -> dict[str, Any]:
-    return config.model_dump(mode="json")

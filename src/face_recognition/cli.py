@@ -58,7 +58,7 @@ def _run_one(
     args: argparse.Namespace,
     config: ScenarioFileConfig,
     scenario_id: int,
-) -> dict[str, object]:
+) -> dict[str, int | float]:
     from .train import train_scenario
 
     scenario = config.scenario(scenario_id)
@@ -70,7 +70,7 @@ def _run_one(
         augmentation=config.augmentation,
         split=config.split,
         output_root=args.output,
-        save_model=args.save_model or config.output.save_model,
+        save_model=args.save_model or config.save_model,
         verbose=0 if args.quiet else 1,
     )
     evaluation = evaluate_model(

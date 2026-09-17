@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Iterable
 
 import cv2
@@ -105,18 +104,3 @@ def augment_training_set(
     copies_per_source = 1 + augmentation.copies_per_image
     repeated_labels = np.repeat(label_list, copies_per_source).astype(np.int64)
     return augmented, repeated_labels
-
-
-def write_augmented_images(
-    images: Iterable[np.ndarray], output_directory: str | Path
-) -> list[Path]:
-    directory = Path(output_directory)
-    directory.mkdir(parents=True, exist_ok=True)
-    paths: list[Path] = []
-    for index, image in enumerate(images, start=1):
-        path = directory / f"augmented-{index:06d}.png"
-        bgr = cv2.cvtColor(_validate_image(image), cv2.COLOR_RGB2BGR)
-        if not cv2.imwrite(str(path), bgr):
-            raise OSError(f"could not write augmented image: {path}")
-        paths.append(path)
-    return paths

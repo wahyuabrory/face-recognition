@@ -234,14 +234,3 @@ def _write_confusion_matrix(path: Path, matrix: list[list[int]], labels: list[st
         writer.writerow(["actual\\predicted", *labels])
         for label, row in zip(labels, matrix, strict=True):
             writer.writerow([label, *row])
-
-
-def rank_results(results: Sequence[EvaluationResult]) -> list[EvaluationResult]:
-    return sorted(
-        results,
-        key=lambda result: (
-            -result.test_accuracy,
-            result.test_loss,
-            result.scenario.id if result.scenario is not None else 0,
-        ),
-    )
