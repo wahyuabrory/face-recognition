@@ -1,83 +1,52 @@
 # face-recognition
 
-`face-recognition` is a reusable face-recognition training and evaluation pipeline built around transfer learning. It compares MobileNetV2 and EfficientNetB0 across crop, pixel-scaling, and brightness settings. The package expects a labeled image dataset supplied by the caller. No face images, trained models, or identity mappings are included.
+This project trains and compares face classifiers from a local image dataset. Put each person's images in a separate folder, choose an experiment scenario, and the command-line tool handles face detection, cropping, augmentation, training, evaluation, and result files.
 
-## What it does
+The goal is comparison, not deployment. The experiments compare MobileNetV2 and EfficientNetB0 while changing the face crop, pixel scaling, and brightness augmentation. A trained model can identify only the people present in its training data. Adding or changing people requires another training run.
 
-- discovers any directory-per-class image dataset
-- detects the largest face with OpenCV Haar detection
-- crops with a configurable margin and clamps bounds to the image
-- keeps each original training image and creates five in-memory augmented copies
-- trains frozen ImageNet-backed MobileNetV2 or EfficientNetB0 classifiers
-- evaluates one original plus five augmented test copies per held-out image
-- reports accuracy, loss, precision, recall, F1-score, support, and confusion matrices
-- ranks current runs by accuracy, then loss
-- writes checked JSON and CSV artifacts below the requested output root
+The repository contains no face images, trained models, or identity records.
 
-This is a fixed-class supervised classifier. It is separate from the production-oriented [`attendance-system`](https://github.com/wahyuabrory/attendance-system) project.
+## Set up the project
 
-## Privacy boundary
+You need Python 3.12, [`uv`](https://docs.astral.sh/uv/), and a CPU that supports AVX instructions. [TensorFlow's published binaries use AVX](https://www.tensorflow.org/install/pip#hardware-requirements), so training cannot run without it.
 
-The dataset is local input, not repository content. Do not commit biometric images, private class mappings, generated models, run artifacts, credentials, or environment files. The default ignored paths cover common local data and output directories. Use generic local examples such as `person_001` when documenting or testing a setup.
-
-## Dataset layout
-
-Provide at least two class directories and at least three supported images in each class:
-
-```text
-dataset/
-├── person_001/
-│   ├── image_001.jpg
-│   └── image_002.jpg
-├── person_002/
-└── person_003/
-```
-
-The loader accepts `.bmp`, `.jpeg`, `.jpg`, `.png`, `.tif`, `.tiff`, and `.webp` files. Directory names become labels in sorted order. The package does not assume a known class list.
-
-## Installation
-
-Python 3.12 is required.
+Install the locked dependencies:
 
 ```bash
 uv sync --locked
 ```
 
-The official TensorFlow binaries require an AVX-capable CPU. See the
-[TensorFlow installation requirements](https://www.tensorflow.org/install/pip#hardware-requirements).
-
-The TensorFlow dependency is imported only when a model is built or training starts. Configuration loading and scenario listing work without importing TensorFlow.
-
-## Scenarios
-
-`configs/scenarios.yaml` contains exactly 16 scenarios. They are the full `2 x 2 x 2 x 2` product of:
-
-| Factor | Values |
-| --- | --- |
-| Crop margin | `0.1`, `0.3` |
-| Normalization | `0_1`, `minus1_1` |
-| Brightness limit | `0.1`, `0.4` |
-| Backbone | `mobilenetv2`, `efficientnetb0` |
-
-Every scenario uses image size `224x224`, batch size `32`, a maximum of `20` epochs, learning rate `0.0001`, dropout `0.3`, dense layer size `128`, and seed `42`. The split target is `70:20:10`.
-
-For each training image, the augmenter keeps one original and creates exactly five augmented copies. Each augmented copy samples rotation in `[-20, 20]` degrees, applies horizontal flip, and adds a pixel shift sampled from the scenario brightness limit. Grayscale conversion remains available as an augmentation operation, but it is disabled in the baseline configuration to match the combined training augmenter behavior.
-
-Evaluation applies the same rule to held-out test images: one original plus five augmented copies. Validation images are not augmented.
-
-The classifier head is `GlobalAveragePooling2D`, `Dropout(0.3)`, `Dense(128, relu)`, `Dropout(0.3)`, then the softmax output. Early stopping monitors `val_accuracy` with patience `5` and restores the best weights. `ReduceLROnPlateau` monitors `val_loss`, uses factor `0.5`, patience `3`, and minimum learning rate `1e-7`.
-
-Normalization is plain pixel scaling for both backbones. `0_1` divides `uint8` values by `255`. `minus1_1` divides by `127.5` and subtracts `1`. The package does not silently apply a different backbone-specific preprocessing function.
-
-List scenarios without loading TensorFlow:
+You can inspect configuration without loading TensorFlow:
 
 ```bash
 uv run face-recognition list-scenarios
 ```
 
-## Run training
+## Prepare the dataset
 
-Train one scenario with a local dataset:
+Create one folder for each person. Each folder needs at least three supported images, and the dataset needs at least two people.
+
+```text
+dataset/
+├── person_001/
+│   ├── image_001.jpg
+│   ├── image_002.jpg
+│   └── image_003.jpg
+└── person_002/
+    ├── image_001.jpg
+    ├── image_002.jpg
+    └── image_003.jpg
+```
+
+Folder names become class labels in sorted order. The loader accepts `.bmp`, `.jpeg`, `.jpg`, `.png`, `.tif`, `.tiff`, and `.webp` files.
+
+Keep the dataset local. The repository ignores `dataset/`, `data/`, and `private/`, but you should still check staged files before every commit. Do not commit biometric images, private identity mappings, credentials, models, or experiment output.
+
+## Run an experiment
+
+The scenario configuration is in [`configs/scenarios.yaml`](configs/scenarios.yaml). It defines 16 combinations of crop margin, pixel normalization, brightness augmentation, and model backbone.
+
+Train and evaluate one scenario:
 
 ```bash
 uv run face-recognition train \
@@ -86,7 +55,7 @@ uv run face-recognition train \
   --output ./artifacts
 ```
 
-Run all sixteen scenarios:
+Run every scenario:
 
 ```bash
 uv run face-recognition run-all \
@@ -95,7 +64,7 @@ uv run face-recognition run-all \
   --output ./artifacts
 ```
 
-Fine-tuning is opt-in. It unfreezes the last 30 layers of the selected backbone at learning rate `1e-5`:
+Training uses frozen ImageNet weights by default. Add `--fine-tune` to unfreeze the final backbone layers after the baseline training stage:
 
 ```bash
 uv run face-recognition train \
@@ -105,11 +74,11 @@ uv run face-recognition train \
   --output ./artifacts
 ```
 
-Use `--save-model` only when a local model file is needed. Model files and run outputs belong under an ignored output directory.
+Add `--save-model` only when you need a local `.keras` model file. Models and run output belong in an ignored directory such as `artifacts/`.
 
-## Output files
+## Read the results
 
-Each evaluated scenario uses a directory like `scenario-05/` and writes:
+Each run writes its files under a scenario folder such as `artifacts/scenario-05/`:
 
 ```text
 metrics.json
@@ -119,21 +88,19 @@ training-history.json
 run-config.json
 ```
 
-The output helper resolves every path and rejects traversal or symlink escapes outside the requested output root. JSON and CSV labels come from the class directories supplied for that run.
+The metrics include loss, accuracy, precision, recall, F1 score, support, and a confusion matrix. A full run ranks scenarios by highest test accuracy, then lowest test loss.
 
-## Limitations
+Read [`docs/methodology.md`](docs/methodology.md) for the data split, face crop rules, augmentation, model structure, normalization, evaluation, and privacy boundaries.
 
-Haar detection can fail with poor lighting, pose, occlusion, or small faces. A fixed classifier only knows the classes used for training, so changing the class set requires retraining. Results depend on the supplied data and should not be treated as a general accuracy claim. This package does not implement liveness checks, enrollment, access control, a web API, or a production database.
+## Know the limits
 
-## Relationship to attendance-system
+OpenCV Haar detection can miss faces when lighting, pose, occlusion, or image size is poor. Training results depend on the supplied dataset and do not represent general face-recognition accuracy.
 
-The two projects have different jobs:
+This project does not provide liveness checks, identity enrollment, access control, a web API, or a database. For an attendance backend based on face embeddings, see [`attendance-system`](https://github.com/wahyuabrory/attendance-system).
 
-| This package | `attendance-system` |
-| --- | --- |
-| Fixed-class supervised classifier | Production-oriented recognition backend |
-| MobileNetV2 or EfficientNetB0 | YuNet plus SFace embeddings |
-| Class changes require training | New identities can be enrolled without classifier retraining |
-| Local training and evaluation artifacts | FastAPI, PostgreSQL, and pgvector runtime |
+## Find your way around
 
-See [`docs/methodology.md`](docs/methodology.md) for the split, crop, augmentation, model, evaluation, and privacy details.
+- [`src/face_recognition`](src/face_recognition) contains the pipeline and command-line interface.
+- [`configs/scenarios.yaml`](configs/scenarios.yaml) is the experiment configuration.
+- [`docs/methodology.md`](docs/methodology.md) describes the experiment rules in detail.
+- [`tests`](tests) covers configuration, data splitting, scenarios, and face preprocessing.
