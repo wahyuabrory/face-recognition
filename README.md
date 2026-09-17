@@ -9,7 +9,8 @@
 - crops with a configurable margin and clamps bounds to the image
 - keeps each original training image and creates five in-memory augmented copies
 - trains frozen ImageNet-backed MobileNetV2 or EfficientNetB0 classifiers
-- evaluates accuracy, loss, precision, recall, F1-score, support, and confusion matrices
+- evaluates one original plus five augmented test copies per held-out image
+- reports accuracy, loss, precision, recall, F1-score, support, and confusion matrices
 - ranks current runs by accuracy, then loss
 - writes checked JSON and CSV artifacts below the requested output root
 
@@ -60,7 +61,9 @@ The TensorFlow dependency is imported only when a model is built or training sta
 
 Every scenario uses image size `224x224`, batch size `32`, a maximum of `20` epochs, learning rate `0.0001`, dropout `0.3`, dense layer size `128`, and seed `42`. The split target is `70:20:10`.
 
-For each training image, the augmenter keeps one original and creates exactly five augmented copies. Each augmented copy samples rotation in `[-20, 20]` degrees, applies horizontal flip, and varies brightness within the scenario limit. Grayscale conversion remains available as an augmentation operation, but it is disabled in the baseline configuration to match the combined training augmenter behavior.
+For each training image, the augmenter keeps one original and creates exactly five augmented copies. Each augmented copy samples rotation in `[-20, 20]` degrees, applies horizontal flip, and adds a pixel shift sampled from the scenario brightness limit. Grayscale conversion remains available as an augmentation operation, but it is disabled in the baseline configuration to match the combined training augmenter behavior.
+
+Evaluation applies the same rule to held-out test images: one original plus five augmented copies. Validation images are not augmented.
 
 The classifier head is `GlobalAveragePooling2D`, `Dropout(0.3)`, `Dense(128, relu)`, `Dropout(0.3)`, then the softmax output. Early stopping monitors `val_accuracy` with patience `5` and restores the best weights. `ReduceLROnPlateau` monitors `val_loss`, uses factor `0.5`, patience `3`, and minimum learning rate `1e-7`.
 

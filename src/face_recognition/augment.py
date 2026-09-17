@@ -32,13 +32,13 @@ def _rotate(image: np.ndarray, degrees: float) -> np.ndarray:
         matrix,
         (width, height),
         flags=cv2.INTER_LINEAR,
-        borderMode=cv2.BORDER_REFLECT_101,
+        borderMode=cv2.BORDER_REPLICATE,
     )
 
 
 def _brightness(image: np.ndarray, limit: float, rng: np.random.Generator) -> np.ndarray:
-    factor = float(rng.uniform(1.0 - limit, 1.0 + limit))
-    return np.clip(image.astype(np.float32) * factor, 0, 255).astype(np.uint8)
+    shift = float(rng.uniform(-limit, limit) * 255.0)
+    return np.clip(image.astype(np.float32) + shift, 0, 255).astype(np.uint8)
 
 
 def augment_image(

@@ -139,8 +139,8 @@ def preprocess_image(
     detections = detector(grayscale) if callable(detector) else detector.detect(grayscale)
     box = _largest_box(detections)
 
-    x_margin = int(round(box.width * margin))
-    y_margin = int(round(box.height * margin))
+    x_margin = int(box.width * margin)
+    y_margin = int(box.height * margin)
     left = max(0, box.x - x_margin)
     top = max(0, box.y - y_margin)
     right = min(width, box.x + box.width + x_margin)

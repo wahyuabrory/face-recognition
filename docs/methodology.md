@@ -27,7 +27,9 @@ The detector is injectable. This keeps preprocessing deterministic in unit-level
 
 ## Augmentation
 
-Every training image remains in the training array and produces exactly five additional in-memory augmented copies, for six training entries per source image. The original is unchanged. Each augmented copy samples rotation in `[-20, 20]` degrees, applies a horizontal flip, and adjusts brightness within the scenario limit. Brightness `0.1` samples a factor from `0.9` to `1.1`; brightness `0.4` samples from `0.6` to `1.4`. Grayscale conversion is a supported operation, but the baseline leaves it off to match the combined training augmenter behavior. The global seed controls the NumPy generator used for these choices. Validation and test images are not augmented.
+Every training image remains in the training array and produces exactly five additional in-memory augmented copies, for six training entries per source image. The original is unchanged. Each augmented copy samples rotation in `[-20, 20]` degrees, applies a horizontal flip, and adds a brightness shift sampled from `[-limit x 255, limit x 255]`. Rotation uses replicated edge pixels. Grayscale conversion is a supported operation, but the baseline leaves it off to match the combined training augmenter behavior. The global seed controls the NumPy generator used for these choices. Validation images are not augmented.
+
+Evaluation uses each held-out test image plus five copies made with the same augmentation settings. This matches the executable evaluation pipeline and makes the reported support six times the unaugmented test split size.
 
 ## Factor matrix
 

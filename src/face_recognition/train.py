@@ -172,6 +172,12 @@ def train_scenario(
         augmentation_config,
         seed=training_config.seed,
     )
+    evaluation_images, evaluation_labels = augment_training_set(
+        test_images,
+        test_labels,
+        augmentation_config,
+        seed=training_config.seed,
+    )
 
     try:
         import tensorflow as tf
@@ -244,8 +250,8 @@ def train_scenario(
         scenario=scenario,
         class_names=dataset.classes,
         model=model,
-        test_images=test_images,
-        test_labels=test_labels,
+        test_images=evaluation_images,
+        test_labels=evaluation_labels,
         history=histories,
         artifact_dir=directory,
         epochs_run=epochs_run,
