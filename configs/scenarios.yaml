@@ -1,0 +1,119 @@
+defaults:
+  image_size: [224, 224]
+  batch_size: 32
+  epochs: 20
+  learning_rate: 0.0001
+  dropout: 0.3
+  dense_units: 128
+  seed: 42
+  early_stopping_patience: 5
+  reduce_lr_patience: 3
+  fine_tune: false
+  fine_tune_layers: 30
+  fine_tune_learning_rate: 0.00001
+
+split:
+  train_ratio: 0.7
+  validation_ratio: 0.2
+  test_ratio: 0.1
+  seed: 42
+
+preprocessing:
+  image_size: [224, 224]
+  margin: 0.1
+  scale_factor: 1.1
+  min_neighbors: 5
+  min_face_size: [30, 30]
+
+augmentation:
+  copies_per_image: 5
+  rotation_degrees: 20.0
+  horizontal_flip: true
+  brightness: 0.1
+  grayscale: false
+
+output:
+  root: artifacts
+  save_model: false
+
+scenarios:
+  - id: 1
+    margin: 0.1
+    normalization: "0_1"
+    brightness: 0.1
+    backbone: mobilenetv2
+  - id: 2
+    margin: 0.1
+    normalization: "0_1"
+    brightness: 0.1
+    backbone: efficientnetb0
+  - id: 3
+    margin: 0.1
+    normalization: "0_1"
+    brightness: 0.4
+    backbone: mobilenetv2
+  - id: 4
+    margin: 0.1
+    normalization: "0_1"
+    brightness: 0.4
+    backbone: efficientnetb0
+  - id: 5
+    margin: 0.1
+    normalization: "minus1_1"
+    brightness: 0.1
+    backbone: mobilenetv2
+  - id: 6
+    margin: 0.1
+    normalization: "minus1_1"
+    brightness: 0.1
+    backbone: efficientnetb0
+  - id: 7
+    margin: 0.1
+    normalization: "minus1_1"
+    brightness: 0.4
+    backbone: mobilenetv2
+  - id: 8
+    margin: 0.1
+    normalization: "minus1_1"
+    brightness: 0.4
+    backbone: efficientnetb0
+  - id: 9
+    margin: 0.3
+    normalization: "0_1"
+    brightness: 0.1
+    backbone: mobilenetv2
+  - id: 10
+    margin: 0.3
+    normalization: "0_1"
+    brightness: 0.1
+    backbone: efficientnetb0
+  - id: 11
+    margin: 0.3
+    normalization: "0_1"
+    brightness: 0.4
+    backbone: mobilenetv2
+  - id: 12
+    margin: 0.3
+    normalization: "0_1"
+    brightness: 0.4
+    backbone: efficientnetb0
+  - id: 13
+    margin: 0.3
+    normalization: "minus1_1"
+    brightness: 0.1
+    backbone: mobilenetv2
+  - id: 14
+    margin: 0.3
+    normalization: "minus1_1"
+    brightness: 0.1
+    backbone: efficientnetb0
+  - id: 15
+    margin: 0.3
+    normalization: "minus1_1"
+    brightness: 0.4
+    backbone: mobilenetv2
+  - id: 16
+    margin: 0.3
+    normalization: "minus1_1"
+    brightness: 0.4
+    backbone: efficientnetb0

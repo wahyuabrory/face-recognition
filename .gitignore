@@ -1,0 +1,26 @@
+.env
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# Private or local datasets and run outputs
+dataset/
+data/
+private/
+models/
+artifacts/
+
+# Model and serialized runtime artifacts
+*.h5
+*.keras
+*.pkl
+*.joblib
+*.onnx
+
+# Private source material
+createch_classification_v3.ipynb
+face-recognition-plan.md
+face-recognition-plan.html

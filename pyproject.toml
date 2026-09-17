@@ -1,0 +1,52 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "face-recognition"
+version = "0.1.0"
+description = "Reusable face-recognition training and evaluation pipeline"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+license = { file = "LICENSE" }
+dependencies = [
+  "numpy>=1.26,<3",
+  "opencv-python-headless>=4.10,<5",
+  "pydantic>=2.7,<3",
+  "pyyaml>=6.0,<7",
+  "tensorflow>=2.20,<2.22",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0,<9",
+  "ruff>=0.8,<1",
+]
+
+[project.scripts]
+face-recognition = "face_recognition.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/face_recognition"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src"]
+extend-exclude = [
+  "createch_classification_v3.ipynb",
+  "face-recognition-plan.html",
+  "face-recognition-plan.md",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.0,<9",
+  "ruff>=0.8,<1",
+]
